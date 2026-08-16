@@ -7,9 +7,8 @@
 # "sync: false" (Render will prompt for each one during setup).
 #
 # This does NOT create the database or Redis for you — Neon and Upstash
-# aren't Render services, so those are created separately (see the chat
-# message this file was delivered with) and their connection details get
-# pasted into the env vars below.
+# aren't Render services, so those are created separately and their
+# connection details get pasted into the env vars below.
 
 services:
   - type: web
@@ -29,9 +28,6 @@ services:
         value: prod
 
       # --- Database (Neon) ---
-      # Neon gives you one connection string; split it into these three
-      # fields for Spring's datasource config. Get these from your Neon
-      # project dashboard -> Connection Details.
       - key: DB_HOST
         sync: false
       - key: DB_PORT
@@ -46,8 +42,6 @@ services:
         value: "true"
 
       # --- Redis (Upstash) ---
-      # From your Upstash dashboard -> Details -> "Redis Connect" (the
-      # host/port/password fields, not the single redis:// URL).
       - key: REDIS_HOST
         sync: false
       - key: REDIS_PORT
@@ -80,14 +74,6 @@ services:
         sync: false
 
       # --- AI service ---
-      # Point this at wherever the AI service actually runs. Since the AI
-      # service is staying local for now (see chat message), this will
-      # only work while your own machine is reachable at that address —
-      # fine for solo testing, not for anyone else hitting the deployed
-      # backend. Leave it pointed at a placeholder until the AI service
-      # has a real deployed URL; AiServiceClient degrades gracefully
-      # (recommendations fall back, chat returns a clear 503) rather than
-      # crashing the backend when this is unreachable.
       - key: AI_SERVICE_BASE_URL
         sync: false
       - key: AI_SERVICE_INTERNAL_API_KEY
