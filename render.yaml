@@ -7,8 +7,9 @@
 # "sync: false" (Render will prompt for each one during setup).
 #
 # This does NOT create the database or Redis for you — Neon and Upstash
-# aren't Render services, so those are created separately and their
-# connection details get pasted into the env vars below.
+# aren't Render services, so those are created separately (see the chat
+# message this file was delivered with) and their connection details get
+# pasted into the env vars below.
 
 services:
   - type: web
@@ -28,11 +29,23 @@ services:
         value: prod
 
       # --- Database (Neon) ---
-      - key: DB_HOST
-        sync: false
-      - key: DB_PORT
-        value: "5432"
-      - key: DB_NAME
+      # application.yml reads ONE full JDBC URL via ${DB_URL:...} -- it
+      # does NOT assemble a URL from separate host/port/name pieces, so
+      # those must not be split into three vars here (an earlier version
+      # of this file did that, which silently fell through to the H2
+      # fallback default since DB_URL was never actually set, while
+      # DB_USERNAME/DB_PASSWORD below WERE read correctly -- Hikari then
+      # connected to in-memory H2 using real Neon credentials, and Flyway
+      # crashed on the first Postgres-only statement it hit).
+      #
+      # From your Neon dashboard -> Connection Details, you get a string
+      # shaped like:
+      #   postgresql://neondb_owner:AbC123@ep-cool-name-12345.region.aws.neon.tech/neondb?sslmode=require
+      # Convert it to a JDBC URL by (a) swapping the scheme to jdbc:postgresql://
+      # and (b) dropping the embedded username:password@ (those go in the
+      # two separate fields below instead):
+      #   jdbc:postgresql://ep-cool-name-12345.region.aws.neon.tech/neondb?sslmode=require
+      - key: DB_URL
         sync: false
       - key: DB_USERNAME
         sync: false
@@ -42,6 +55,8 @@ services:
         value: "true"
 
       # --- Redis (Upstash) ---
+      # From your Upstash dashboard -> Details -> "Redis Connect" (the
+      # host/port/password fields, not the single redis:// URL).
       - key: REDIS_HOST
         sync: false
       - key: REDIS_PORT
@@ -74,6 +89,14 @@ services:
         sync: false
 
       # --- AI service ---
+      # Point this at wherever the AI service actually runs. Since the AI
+      # service is staying local for now (see chat message), this will
+      # only work while your own machine is reachable at that address —
+      # fine for solo testing, not for anyone else hitting the deployed
+      # backend. Leave it pointed at a placeholder until the AI service
+      # has a real deployed URL; AiServiceClient degrades gracefully
+      # (recommendations fall back, chat returns a clear 503) rather than
+      # crashing the backend when this is unreachable.
       - key: AI_SERVICE_BASE_URL
         sync: false
       - key: AI_SERVICE_INTERNAL_API_KEY
