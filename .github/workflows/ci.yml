@@ -1,0 +1,27 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build (skip tests — none exist yet, see README roadmap)
+        run: mvn clean package -DskipTests -B
+
+      # Render deploys on push to main automatically via its own GitHub
+      # integration once you connect the repo — this workflow is only a
+      # "does it still compile" gate, it does not deploy anything itself.

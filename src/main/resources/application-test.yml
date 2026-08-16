@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:agriverse;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    type: simple
+agriverse:
+  security:
+    jwt:
+      secret: test-secret-key-for-junit-tests-only-not-for-production-use-0123456789
+  admin-bootstrap:
+    email: ${ADMIN_BOOTSTRAP_EMAIL:admin@agriverse.local}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:Admin@12345}

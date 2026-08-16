@@ -1,0 +1,129 @@
+spring:
+  application:
+    name: agriverse-backend
+
+  datasource:
+    url: ${DB_URL:${SPRING_DATASOURCE_URL:jdbc:h2:mem:agriverse;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}}
+    username: ${DB_USERNAME:${SPRING_DATASOURCE_USERNAME:sa}}
+    password: ${DB_PASSWORD:${SPRING_DATASOURCE_PASSWORD:sa}}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:create-drop}
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc.batch_size: 30
+        order_inserts: true
+        order_updates: true
+    show-sql: false
+
+  flyway:
+    enabled: ${FLYWAY_ENABLED:false}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+
+  mail:
+    host: ${MAIL_HOST:smtp.sendgrid.net}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:apikey}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+agriverse:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-this-to-a-long-random-base64-secret-in-production-min-256-bits}
+      access-token-ttl-seconds: ${JWT_ACCESS_TTL:900}
+      refresh-token-ttl-seconds: ${JWT_REFRESH_TTL:2592000}
+      issuer: agriverse.app
+    password-reset-token-ttl-minutes: 30
+    email-verification-token-ttl-hours: 48
+  # If email is set, that account is created (if missing) or promoted to
+  # ADMIN + ACTIVE on every startup. Meant for local/dev/test use (incl. the
+  # in-memory H2 profile, which has no persistent DB to hand-edit between
+  # runs) — leave email unset once a real admin exists in production.
+  admin-bootstrap:
+    email: ${ADMIN_BOOTSTRAP_EMAIL:}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://agriverse.app,https://staging.agriverse.app}
+  frontend:
+    # Used to build clickable links in verification/password-reset emails
+    # (e.g. {base-url}/verify-email?token=...). Must match wherever the
+    # Next.js app is actually served in each environment.
+    base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
+  rate-limit:
+    auth-endpoints-per-minute: 10
+  pagination:
+    default-page-size: 20
+    max-page-size: 50
+  media:
+    s3-bucket: ${S3_BUCKET:agriverse-media}
+    cdn-base-url: ${CDN_BASE_URL:https://cdn.agriverse.app}
+  ai:
+    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+    internal-api-key: ${AI_SERVICE_INTERNAL_API_KEY:change-this-in-production}
+    connect-timeout-ms: ${AI_SERVICE_CONNECT_TIMEOUT_MS:2000}
+    default-read-timeout-ms: ${AI_SERVICE_READ_TIMEOUT_MS:5000}
+    chat-read-timeout-ms: ${AI_SERVICE_CHAT_TIMEOUT_MS:20000}
+    # Off by default: rule-based recommendations (already shipped) keep working
+    # until the AI service has articles indexed and this is deliberately flipped on.
+    semantic-recommendations-enabled: ${AI_SEMANTIC_RECOMMENDATIONS_ENABLED:false}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: INFO
+    com.agriverse: DEBUG
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{requestId}] %-5level %logger{36} - %msg%n"

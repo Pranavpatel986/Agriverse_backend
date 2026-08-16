@@ -1,0 +1,11 @@
+package com.agriverse.api.identity.repository;
+
+import com.agriverse.api.identity.entity.Author;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface AuthorRepository extends JpaRepository<Author, Long> {
+    Optional<Author> findByUserId(Long userId);
+    Optional<Author> findByUserPublicId(java.util.UUID userPublicId);
+}

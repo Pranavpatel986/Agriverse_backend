@@ -1,0 +1,94 @@
+# Render Blueprint — https://render.com/docs/infrastructure-as-code
+#
+# How to use: push this file to the root of your backend repo, then in the
+# Render dashboard choose "New +" -> "Blueprint" and point it at the repo.
+# Render reads this file and creates the service below with these settings
+# already filled in — you only need to paste in the secret values marked
+# "sync: false" (Render will prompt for each one during setup).
+#
+# This does NOT create the database or Redis for you — Neon and Upstash
+# aren't Render services, so those are created separately (see the chat
+# message this file was delivered with) and their connection details get
+# pasted into the env vars below.
+
+services:
+  - type: web
+    name: agriverse-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      # Render sets PORT automatically; SERVER_PORT just needs to read it.
+      - key: SERVER_PORT
+        fromService:
+          type: web
+          name: agriverse-backend
+          property: port
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # --- Database (Neon) ---
+      # Neon gives you one connection string; split it into these three
+      # fields for Spring's datasource config. Get these from your Neon
+      # project dashboard -> Connection Details.
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: FLYWAY_ENABLED
+        value: "true"
+
+      # --- Redis (Upstash) ---
+      # From your Upstash dashboard -> Details -> "Redis Connect" (the
+      # host/port/password fields, not the single redis:// URL).
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: "6379"
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_SSL
+        value: "true"
+
+      # --- Auth / JWT ---
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_BOOTSTRAP_EMAIL
+        sync: false
+      - key: ADMIN_BOOTSTRAP_PASSWORD
+        generateValue: true
+
+      # --- CORS: must be your actual Vercel URL once you have it ---
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+      # --- Mail (optional — leave blank to skip email sending) ---
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+
+      # --- AI service ---
+      # Point this at wherever the AI service actually runs. Since the AI
+      # service is staying local for now (see chat message), this will
+      # only work while your own machine is reachable at that address —
+      # fine for solo testing, not for anyone else hitting the deployed
+      # backend. Leave it pointed at a placeholder until the AI service
+      # has a real deployed URL; AiServiceClient degrades gracefully
+      # (recommendations fall back, chat returns a clear 503) rather than
+      # crashing the backend when this is unreachable.
+      - key: AI_SERVICE_BASE_URL
+        sync: false
+      - key: AI_SERVICE_INTERNAL_API_KEY
+        generateValue: true
